@@ -1,146 +1,126 @@
-const Manager = require("./lib/Manager");
-const Engineer = require("./lib/Engineer");
-const Intern = require("./lib/Intern");
-const inquirer = require("inquirer");
-const path = require("path");
-const fs = require("fs");
 
-const OUTPUT_DIR = path.resolve(__dirname, "output");
-const outputPath = path.join(OUTPUT_DIR, "team.html");
+const inquirer = require('inquirer');
+const fs = require('fs');
+const path = require('path');
+const Manager = require('./lib/Manager');
+const Engineer = require('./lib/Engineer');
+const Intern = require('./lib/Intern');
+const render = require('./src/page-template');
 
-const render = require("./src/page-template.js");
+const OUTPUT_DIR = path.resolve(__dirname, 'output');
+const outputPath = path.join(OUTPUT_DIR, 'team.html');
 
-const team = [];
+const teamMembers = [];
 
-function createManager() {
-  console.log("Please enter the manager's information:");
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: "Manager's name:",
-      },
-      {
-        type: 'input',
-        name: 'id',
-        message: "Manager's ID:",
-      },
-      {
-        type: 'input',
-        name: 'email',
-        message: "Manager's email:",
-      },
-      {
-        type: 'input',
-        name: 'officeNumber',
-        message: "Manager's office number:",
-      },
-    ])
-    .then((answers) => {
-      const manager = new Manager(answers.name, answers.id, answers.email, answers.officeNumber);
-      team.push(manager);
-      createTeam();
+const createManager = async () => {
+  console.log('Please enter the manager\'s information:');
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: 'Manager\'s name:',
+    },
+    {
+      type: 'input',
+      name: 'id',
+      message: 'Manager\'s employee ID:',
+    },
+    {
+      type: 'input',
+      name: 'email',
+      message: 'Manager\'s email address:',
+    },
+    {
+      type: 'input',
+      name: 'officeNumber',
+      message: 'Manager\'s office number:',
+    },
+  ]);
+
+  const manager = new Manager(answers.name, answers.id, answers.email, answers.officeNumber);
+  teamMembers.push(manager);
+
+  console.log('Manager added successfully!\n');
+};
+
+const createEmployee = async (role) => {
+  console.log(`Please enter the ${role.toLowerCase()}'s information:`);
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'name',
+      message: `${role}'s name:`,
+    },
+    {
+      type: 'input',
+      name: 'id',
+      message: `${role}'s employee ID:`,
+    },
+    {
+      type: 'input',
+      name: 'email',
+      message: `${role}'s email address:`,
+    },
+  ]);
+
+  if (role === 'Engineer') {
+    const github = await inquirer.prompt({
+      type: 'input',
+      name: 'github',
+      message: 'Engineer\'s GitHub username:',
     });
-}
 
-function createTeam() {
-  console.log('Select the next team member to add:');
-  inquirer
-    .prompt([
-      {
-        type: 'list',
-        name: 'choice',
-        message: 'Choose a team member to add:',
-        choices: ['Engineer', 'Intern', 'Finish building the team'],
-      },
-    ])
-    .then((answers) => {
-      if (answers.choice === 'Engineer') {
-        createEngineer();
-      } else if (answers.choice === 'Intern') {
-        createIntern();
-      } else {
-        renderHTML();
-      }
+    const engineer = new Engineer(answers.name, answers.id, answers.email, github.github);
+    teamMembers.push(engineer);
+  } else if (role === 'Intern') {
+    const school = await inquirer.prompt({
+      type: 'input',
+      name: 'school',
+      message: 'Intern\'s school:',
     });
-}
 
-function createEngineer() {
-  console.log("Please enter the engineer's information:");
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: "Engineer's name:",
-      },
-      {
-        type: 'input',
-        name: 'id',
-        message: "Engineer's ID:",
-      },
-      {
-        type: 'input',
-        name: 'email',
-        message: "Engineer's email:",
-      },
-      {
-        type: 'input',
-        name: 'github',
-        message: "Engineer's GitHub username:",
-      },
-    ])
-    .then((answers) => {
-      const engineer = new Engineer(answers.name, answers.id, answers.email, answers.github);
-      team.push(engineer);
-      createTeam();
+    const intern = new Intern(answers.name, answers.id, answers.email, school.school);
+    teamMembers.push(intern);
+  }
+
+  console.log(`${role} added successfully!\n`);
+};
+
+const init = async () => {
+  await createManager();
+
+  let addEmployee = true;
+
+  while (addEmployee) {
+    const { choice } = await inquirer.prompt({
+      type: 'list',
+      name: 'choice',
+      message: 'What would you like to do next?',
+      choices: ['Add Engineer', 'Add Intern', 'Finish building the team'],
     });
-}
 
-function createIntern() {
-  console.log("Please enter the intern's information:");
-  inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: "Intern's name:",
-      },
-      {
-        type: 'input',
-        name: 'id',
-        message: "Intern's ID:",
-      },
-      {
-        type: 'input',
-        name: 'email',
-        message: "Intern's email:",
-      },
-      {
-        type: 'input',
-        name: 'school',
-        message: "Intern's school:",
-      },
-    ])
-    .then((answers) => {
-      const intern = new Intern(answers.name, answers.id, answers.email, answers.school);
-      team.push(intern);
-      createTeam();
-    });
-}
+    switch (choice) {
+      case 'Add Engineer':
+        await createEmployee('Engineer');
+        break;
+      case 'Add Intern':
+        await createEmployee('Intern');
+        break;
+      case 'Finish building the team':
+        addEmployee = false;
+        break;
+      default:
+        break;
+    }
+  }
 
-function renderHTML() {
-  const html = render(team);
-
+  const html = render(teamMembers);
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR);
   }
+  fs.writeFileSync(outputPath, html);
 
-  fs.writeFile(outputPath, html, (err) => {
-    if (err) throw err;
-    console.log('Team HTML file has been created!');
-  });
-}
+  console.log(`Team HTML generated successfully! Check the file at ${outputPath}`);
+};
 
-createManager();
+init();

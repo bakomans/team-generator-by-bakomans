@@ -1,21 +1,23 @@
 {
   "name": "team-generator-by-bakomans",
   "version": "1.0.0",
-  "description": "",
+  "description": "A command-line application for generating a webpage displaying a team's basic info",
   "main": "index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "test": "jest",
+    "start": "node -r esm index.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "esm": "^3.2.25",
-    "inquirer": "^8.1.2"
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6"
   }
-  
 }
